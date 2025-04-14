@@ -34,6 +34,7 @@
 #include "ActorUpdateManager.h"
 #include "ActorArmorTangentUpdater.h"
 #include "CommandInterface.h"
+#include "FormTagInterface.h"
 
 #include "FaceMorphInterface.h"
 #include "PartHandler.h"
@@ -82,6 +83,8 @@ ActorArmorTangentUpdater	g_actorArmorTangentUpdater;
 AttachmentInterface			g_attachmentInterface;
 CommandInterface			g_commandInterface;
 PresetInterface				g_presetInterface;
+FormTagInterface			g_formTagInterface;
+
 PartSet	g_partSet;
 
 StringTable g_stringTable;
@@ -489,6 +492,7 @@ bool RegisterCharGenScaleform(GFxMovieView * view, GFxValue * root)
 	RegisterFunction <SKSEScaleform_ReadPreset>(root, view, "ReadPreset");
 	RegisterFunction <SKSEScaleform_ReloadSliders>(root, view, "ReloadSliders");
 	RegisterFunction <SKSEScaleform_GetSliderData>(root, view, "GetSliderData");
+	RegisterFunction <SKSEScaleform_GetSliderPartData>(root, view, "GetSliderPartData");
 	RegisterFunction <SKSEScaleform_GetModName>(root, view, "GetModName");
 
 	RegisterFunction <SKSEScaleform_GetPlayerPosition>(root, view, "GetPlayerPosition");
@@ -609,6 +613,7 @@ void SKSEMessageHandler(SKSEMessagingInterface::Message * message)
 
 			g_tintMaskInterface.LoadMods();
 			g_morphInterface.LoadMods();
+			g_formTagInterface.LoadMods();
 		}
 		break;
 	}
@@ -721,9 +726,9 @@ __declspec(dllexport) SKSEPluginVersionData SKSEPlugin_Version =
 	0,	// not version independent
 	0,
 #if STORE_VERSION == RUNTIME_TYPE_BETHESDA
-	{ RUNTIME_VERSION_1_6_640, 0 },
+	{ RUNTIME_VERSION_1_6_1170, 0 },
 #elif STORE_VERSION == RUNTIME_TYPE_GOG
-	{ RUNTIME_VERSION_1_6_659_GOG, 0 },
+	{ RUNTIME_VERSION_1_6_1179_GOG, 0 },
 #endif
 	0,	// works with any version of the script extender. you probably do not need to put anything here
 };
@@ -945,6 +950,7 @@ bool SKSEPlugin_Load(const SKSEInterface * skse)
 	g_interfaceMap.AddInterface("ActorUpdateManager", &g_actorUpdateManager);
 	g_interfaceMap.AddInterface("Attachment", &g_attachmentInterface);
 	g_interfaceMap.AddInterface("Command", &g_commandInterface);
+	g_interfaceMap.AddInterface("FormTag", &g_formTagInterface);
 
 	if (g_enableTangentSpaceCorrection)
 	{

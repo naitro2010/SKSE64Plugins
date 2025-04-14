@@ -289,7 +289,7 @@ void NiTransformInterface::RemoveInvalidTransforms(UInt32 formId)
 				{
 					for (auto it = ait.second.begin(); it != ait.second.end();)
 					{
-						std::string strKey(*it->first);
+						std::string strKey(it->first->c_str());
 						SKEEFixedString ext(strKey.substr(strKey.find_last_of(".") + 1).c_str());
 						if (ext == SKEEFixedString("esp") || ext == SKEEFixedString("esm") || ext == SKEEFixedString("esl"))
 						{
@@ -418,7 +418,7 @@ bool NiTransformInterface::Impl_VisitNodeTransforms(TESObjectREFR * refr, bool f
 					// Look at extensions
 					VisitObjects(root, [&](NiAVObject * root)
 					{
-						NiPointer<NiExtraData> extraData = root->GetExtraData(BSFixedString("EXTN").data);
+						NiPointer<NiExtraData> extraData = NifUtils::GetExtraData(root, "EXTN");
 						if (extraData) {
 							NiStringsExtraData * extraSkeletons = ni_cast(extraData, NiStringsExtraData);
 							if (extraSkeletons && (extraSkeletons->m_size % 3) == 0) {
@@ -592,7 +592,7 @@ void NiTransformInterface::SetTransforms(UInt32 formId, bool immediate, bool res
 				std::set<SKEEFixedString> modified, changed;
 				VisitObjects(root, [&](NiAVObject * root)
 				{
-					NiPointer<NiExtraData> extraData = root->GetExtraData(BSFixedString("EXTN").data);
+					NiPointer<NiExtraData> extraData = NifUtils::GetExtraData(root, "EXTN");
 					if (extraData) {
 						NiStringsExtraData * extraSkeletons = ni_cast(extraData, NiStringsExtraData);
 						if (extraSkeletons && (extraSkeletons->m_size % 3) == 0) {
@@ -604,12 +604,12 @@ void NiTransformInterface::SetTransforms(UInt32 formId, bool immediate, bool res
 					}
 					if (g_enableEquippableTransforms)
 					{
-						NiStringExtraData * stringData = ni_cast(root->GetExtraData(BSFixedString("SDTA").data), NiStringExtraData);
+						NiStringExtraData * stringData = ni_cast(NifUtils::GetExtraData(root, "SDTA"), NiStringExtraData);
 						if (stringData)
 						{
 							g_skeletonExtenderInterface.ReadTransforms(refr, stringData->m_pString, i >= 1 ? true : false, gender >= 1 ? true : false, modified, changed);
 						}
-						NiFloatExtraData * floatData = ni_cast(root->GetExtraData(BSFixedString("HH_OFFSET").data), NiFloatExtraData);
+						NiFloatExtraData * floatData = ni_cast(NifUtils::GetExtraData(root, "HH_OFFSET"), NiFloatExtraData);
 						if (floatData)
 						{
 							char buffer[32 + std::numeric_limits<float>::digits];
@@ -1158,7 +1158,7 @@ void NiTransformInterface::UpdateNodeAllTransforms(TESObjectREFR* ref)
 
 void NiTransformInterface::VisitNodes(TESObjectREFR* refr, bool firstPerson, bool isFemale, NodeVisitor& visitor)
 {
-	Impl_VisitNodes(refr, firstPerson, isFemale, [&](SKEEFixedString node, OverrideRegistration<StringTableItem>* reg)
+	Impl_VisitNodes(refr, firstPerson, isFemale, [&](const SKEEFixedString& node, OverrideRegistration<StringTableItem>* reg)
 	{
 		for (auto& set : *reg)
 		{
@@ -1166,23 +1166,23 @@ void NiTransformInterface::VisitNodes(TESObjectREFR* refr, bool firstPerson, boo
 			{
 				if (item.key == OverrideVariant::kParam_NodeTransformPosition && item.index == 0)
 				{
-					Position pos = GetNodeTransformPosition(refr, firstPerson, isFemale, node, set.first->c_str());
-					visitor.VisitPosition(node, set.first->c_str(), pos);
+					Position pos = GetNodeTransformPosition(refr, firstPerson, isFemale, node.c_str(), set.first->c_str());
+					visitor.VisitPosition(node.c_str(), set.first->c_str(), pos);
 				}
 				else if (item.key == OverrideVariant::kParam_NodeTransformRotation && item.index == 0)
 				{
-					Rotation rot = GetNodeTransformRotation(refr, firstPerson, isFemale, node, set.first->c_str());
-					visitor.VisitRotation(node, set.first->c_str(), rot);
+					Rotation rot = GetNodeTransformRotation(refr, firstPerson, isFemale, node.c_str(), set.first->c_str());
+					visitor.VisitRotation(node.c_str(), set.first->c_str(), rot);
 				}
 				else if (item.key == OverrideVariant::kParam_NodeTransformScale)
 				{
-					float scale = GetNodeTransformScale(refr, firstPerson, isFemale, node, set.first->c_str());
-					visitor.VisitScale(node, set.first->c_str(), scale);
+					float scale = GetNodeTransformScale(refr, firstPerson, isFemale, node.c_str(), set.first->c_str());
+					visitor.VisitScale(node.c_str(), set.first->c_str(), scale);
 				}
 				else if (item.key == OverrideVariant::kParam_NodeTransformScaleMode)
 				{
-					UInt32 scaleMode = GetNodeTransformScaleMode(refr, firstPerson, isFemale, node, set.first->c_str());
-					visitor.VisitScaleMode(node, set.first->c_str(), scaleMode);
+					UInt32 scaleMode = GetNodeTransformScaleMode(refr, firstPerson, isFemale, node.c_str(), set.first->c_str());
+					visitor.VisitScaleMode(node.c_str(), set.first->c_str(), scaleMode);
 				}
 			}
 		}

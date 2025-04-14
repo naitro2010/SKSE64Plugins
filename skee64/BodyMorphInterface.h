@@ -215,6 +215,9 @@ public:
 	size_t GetByteSize() const { return vertexMap.memoryUsage; }
 
 private:
+#ifdef _DEBUG
+	SKEEFixedString path;
+#endif
 	TriShapeMap vertexMap;
 	std::time_t accessed;
 };
@@ -344,13 +347,13 @@ public:
 		{
 			for (auto & item : *map)
 			{
-				visitor.Visit(actor, key, item.first->c_str(), item.second);
+				visitor.Visit(actor, key.c_str(), item.first->c_str(), item.second);
 			}
 		});
 	}
 
-	virtual void VisitMorphs(TESObjectREFR * actor, MorphVisitor & visitor) override { Impl_VisitMorphs(actor, [&](SKEEFixedString key, std::unordered_map<StringTableItem, float> * map) { visitor.Visit(actor, key); }); }
-	virtual void VisitKeys(TESObjectREFR * actor, const char * name, MorphKeyVisitor & visitor) override { Impl_VisitKeys(actor, name, [&](SKEEFixedString key, float value) { visitor.Visit(key, value); }); }
+	virtual void VisitMorphs(TESObjectREFR * actor, MorphVisitor & visitor) override { Impl_VisitMorphs(actor, [&](SKEEFixedString key, std::unordered_map<StringTableItem, float> * map) { visitor.Visit(actor, key.c_str()); }); }
+	virtual void VisitKeys(TESObjectREFR * actor, const char * name, MorphKeyVisitor & visitor) override { Impl_VisitKeys(actor, name, [&](SKEEFixedString key, float value) { visitor.Visit(key.c_str(), value); }); }
 
 	virtual void ClearMorphs(TESObjectREFR * actor) override { Impl_ClearMorphs(actor); }
 
@@ -367,7 +370,7 @@ public:
 	virtual bool HasBodyMorphName(TESObjectREFR * actor, const char * morphName) override { return Impl_HasBodyMorphName(actor, morphName); }
 	virtual bool HasBodyMorphKey(TESObjectREFR * actor, const char * morphKey) override { return Impl_HasBodyMorphKey(actor, morphKey); }
 	virtual void ClearBodyMorphKeys(TESObjectREFR * actor, const char * morphKey) override { Impl_ClearBodyMorphKeys(actor, morphKey); }
-	virtual void VisitStrings(StringVisitor & visitor) override { Impl_VisitStrings([&visitor](SKEEFixedString key) { visitor.Visit(key); }); }
+	virtual void VisitStrings(StringVisitor & visitor) override { Impl_VisitStrings([&visitor](SKEEFixedString key) { visitor.Visit(key.c_str()); }); }
 	virtual void VisitActors(ActorVisitor & visitor) override { Impl_VisitActors([&visitor](TESObjectREFR* actor) { visitor.Visit(actor); }); }
 	virtual std::vector<SKEEFixedString> GetCachedMorphNames();
 

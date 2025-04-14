@@ -25,6 +25,7 @@ extern BodyMorphInterface	g_bodyMorphInterface;
 extern OverlayInterface		g_overlayInterface;
 extern StringTable			g_stringTable;
 extern FaceMorphInterface	g_morphInterface;
+extern SKSETaskInterface*	g_task;
 
 class ValidRaceFinder : public BGSListForm::Visitor
 {
@@ -283,7 +284,7 @@ void PresetInterface::ApplyPresetData(Actor* actor, PresetDataPtr presetData, bo
 	{
 		for (auto& morph : presetData->bodyMorphData) {
 			for (auto& keys : morph.second)
-				g_bodyMorphInterface.SetMorph(actor, morph.first, keys.first, keys.second);
+				g_bodyMorphInterface.SetMorph(actor, morph.first.c_str(), keys.first.c_str(), keys.second);
 		}
 
 		g_bodyMorphInterface.UpdateModelWeight(actor);
@@ -308,7 +309,7 @@ struct PresetHeader
 	UInt32	runtimeVersion;
 };
 
-bool PresetInterface::SaveJsonPreset(const char* filePath)
+bool PresetInterface::SaveJsonPreset(const char* filePath, Actor* actor)
 {
 	Json::StyledWriter writer;
 	Json::Value root;
@@ -328,8 +329,7 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 	versionInfo["runtimeVersion"] = RUNTIME_VERSION_1_4_2;
 
 
-	PlayerCharacter* player = (*g_thePlayer);
-	TESNPC* npc = DYNAMIC_CAST(player->baseForm, TESForm, TESNPC);
+	TESNPC* npc = DYNAMIC_CAST(actor->baseForm, TESForm, TESNPC);
 	DataHandler* dataHandler = DataHandler::GetSingleton();
 
 	bool isFemale = false;
@@ -378,14 +378,17 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 	}
 
 	std::map<UInt8, std::pair<UInt32, const char*>> tintList;
-	for (UInt32 i = 0; i < player->tintMasks.count; i++)
+	if (actor == (*g_thePlayer))
 	{
-		TintMask* tintMask = nullptr;
-		if (player->tintMasks.GetNthItem(i, tintMask))
+		for (UInt32 i = 0; i < (*g_thePlayer)->tintMasks.count; i++)
 		{
-			UInt32 tintColor = ((UInt32)(tintMask->alpha * 255.0) << 24) | tintMask->color.red << 16 | tintMask->color.green << 8 | tintMask->color.blue;
-			if (tintMask->texture)
-				tintList.emplace(i, std::make_pair(tintColor, tintMask->texture->str.data));
+			TintMask* tintMask = nullptr;
+			if ((*g_thePlayer)->tintMasks.GetNthItem(i, tintMask))
+			{
+				UInt32 tintColor = ((UInt32)(tintMask->alpha * 255.0) << 24) | tintMask->color.red << 16 | tintMask->color.green << 8 | tintMask->color.blue;
+				if (tintMask->texture)
+					tintList.emplace(i, std::make_pair(tintColor, tintMask->texture->str.data));
+			}
 		}
 	}
 
@@ -506,7 +509,7 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 
 	// Collect override data
 	PresetData::OverrideData overrideData;
-	g_overrideInterface.VisitNodes(player, [&overrideData](SKEEFixedString node, OverrideVariant& value)
+	g_overrideInterface.VisitNodes(actor, [&overrideData](SKEEFixedString node, OverrideVariant& value)
 	{
 		overrideData[node].push_back(value);
 	});
@@ -514,7 +517,7 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 	// Collect skin data
 	PresetData::SkinData skinData[2];
 	for (UInt32 i = 0; i <= 1; i++) {
-		g_overrideInterface.VisitSkin(player, isFemale, i == 1, [&i, &skinData](UInt32 slotMask, OverrideVariant& value)
+		g_overrideInterface.VisitSkin(actor, isFemale, i == 1, [&i, &skinData](UInt32 slotMask, OverrideVariant& value)
 		{
 			skinData[i][slotMask].push_back(value);
 			return false;
@@ -524,7 +527,7 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 	// Collect transform data
 	PresetData::TransformData transformData[2];
 	for (UInt32 i = 0; i <= 1; i++) {
-		g_transformInterface.Impl_VisitNodes(player, i == 1, isFemale, [&i, &transformData](SKEEFixedString node, OverrideRegistration<StringTableItem>* keys)
+		g_transformInterface.Impl_VisitNodes(actor, i == 1, isFemale, [&i, &transformData](SKEEFixedString node, OverrideRegistration<StringTableItem>* keys)
 		{
 			keys->Visit([&i, &node, &transformData](const StringTableItem& key, OverrideSet* set)
 			{
@@ -545,7 +548,7 @@ bool PresetInterface::SaveJsonPreset(const char* filePath)
 
 	// Collect body morph data
 	PresetData::BodyMorphData bodyMorphData;
-	g_bodyMorphInterface.Impl_VisitMorphs(player, [&](SKEEFixedString name, std::unordered_map<StringTableItem, float>* map)
+	g_bodyMorphInterface.Impl_VisitMorphs(actor, [&](SKEEFixedString name, std::unordered_map<StringTableItem, float>* map)
 	{
 		for (auto& it : *map)
 		{
@@ -1011,12 +1014,12 @@ bool PresetInterface::LoadJsonPreset(const char* filePath, PresetDataPtr presetD
 		}
 	}
 
-	Json::Value actor = root["actor"];
-	if (!actor.empty() && actor.type() == Json::objectValue) {
-		presetData->weight = actor["weight"].asFloat();
-		presetData->hairColor = actor["hairColor"].asUInt();
-		if (actor.isMember("headTexture")) {
-			presetData->headTexture = DYNAMIC_CAST(GetFormFromIdentifier(actor["headTexture"].asString()), TESForm, BGSTextureSet);
+	Json::Value headData = root["actor"];
+	if (!headData.empty() && headData.type() == Json::objectValue) {
+		presetData->weight = headData["weight"].asFloat();
+		presetData->hairColor = headData["hairColor"].asUInt();
+		if (headData.isMember("headTexture")) {
+			presetData->headTexture = DYNAMIC_CAST(GetFormFromIdentifier(headData["headTexture"].asString()), TESForm, BGSTextureSet);
 		}
 	}
 
@@ -1227,7 +1230,7 @@ bool PresetInterface::LoadJsonPreset(const char* filePath, PresetDataPtr presetD
 					float value = jvalue["value"].asFloat();
 
 					// If the keys were mapped by mod name, skip them if they arent in load order
-					std::string strKey(key);
+					std::string strKey(key.c_str());
 					SKEEFixedString ext(strKey.substr(strKey.find_last_of(".") + 1).c_str());
 					if (ext == SKEEFixedString("esp") || ext == SKEEFixedString("esm") || ext == SKEEFixedString("esl"))
 					{
@@ -1243,6 +1246,70 @@ bool PresetInterface::LoadJsonPreset(const char* filePath, PresetDataPtr presetD
 	}
 
 	return loadError;
+}
+
+bool PresetInterface::SavePreset(const char* filePath, const char* tintPath, Actor* actor)
+{
+	if (actor->formType != Character::kTypeID) {
+		return false;
+	}
+
+	TESNPC* npc = DYNAMIC_CAST(actor->baseForm, TESForm, TESNPC);
+	if (!npc) {
+		return false;
+	}
+
+	SaveJsonPreset(filePath, actor);
+
+	if (tintPath)
+	{
+		std::string path = GetSanitizedPath(filePath).AsString();
+		size_t idx = path.rfind('\\');
+		if (idx != std::string::npos)
+		{
+			auto dir = path.substr(0, idx + 1);
+			auto file = path.substr(idx + 1);
+			
+			g_task->AddTask(new SKSETaskExportTintMask(dir.c_str(), file.c_str()));
+		}
+	}
+
+	return false;
+}
+
+bool PresetInterface::LoadPreset(const char* filePath, const char* tintPath, Actor* actor, ApplyTypes applyTypes)
+{
+	if (actor->formType != Character::kTypeID) {
+		return false;
+	}
+
+	TESNPC* npc = DYNAMIC_CAST(actor->baseForm, TESForm, TESNPC);
+	if (!npc) {
+		return false;
+	}
+
+	if (!filePath)
+	{
+		return false;
+	}
+
+	auto path = GetSanitizedPath(filePath).AsString();
+	auto presetData = std::make_shared<PresetData>();
+	bool loadError = LoadJsonPreset(path.c_str(), presetData);
+	if (loadError) {
+		return false;
+	}
+
+	if (tintPath)
+	{
+		presetData->tintTexture = tintPath;
+	}
+	
+	AssignMappedPreset(npc, presetData);
+	ApplyPresetData(actor, presetData, true, applyTypes);
+
+	CALL_MEMBER_FN(actor, QueueNiNodeUpdate)(true);
+	return true;
 }
 
 bool PresetInterface::LoadBinaryPreset(const char* filePath, PresetDataPtr presetData)
@@ -1579,7 +1646,7 @@ void PresetInterface::ApplyPreset(Actor* actor, TESRace* race, TESNPC* npc, Pres
 
 		for (auto& morph : presetData->bodyMorphData) {
 			for (auto& keys : morph.second)
-				g_bodyMorphInterface.SetMorph(actor, morph.first, keys.first, keys.second);
+				g_bodyMorphInterface.SetMorph(actor, morph.first.c_str(), keys.first.c_str(), keys.second);
 		}
 
 		g_bodyMorphInterface.UpdateModelWeight(actor);

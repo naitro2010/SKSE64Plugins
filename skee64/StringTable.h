@@ -42,8 +42,7 @@ public:
 	operator BSFixedString() const { return BSFixedString(m_internal.c_str()); }
 	BSFixedString AsBSFixedString() const { return operator BSFixedString(); }
 
-	const char * c_str() const { return operator const char *(); }
-	operator const char *() const { return m_internal.c_str(); }
+	const char * c_str() const { return m_internal.c_str(); }
 
 	size_t GetHash() const
 	{

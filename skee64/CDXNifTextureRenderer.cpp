@@ -60,7 +60,7 @@ bool CDXNifTextureRenderer::ApplyMasksToTexture(CDXD3DDevice* device, NiPointer<
 		NiPointer<NiTexture> texture;
 		if (mask.second.texture.length() > 0)
 		{
-			LoadTexture(mask.second.texture, 1, texture, false);
+			LoadTexture(mask.second.texture.c_str(), 1, texture, false);
 		}
 
 		float a = ((mask.second.color >> 24) & 0xFF) / 255.0f;

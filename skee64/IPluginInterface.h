@@ -10,6 +10,7 @@ class NiTransform;
 class TESForm;
 class BaseExtraList;
 class BGSTextureSet;
+class Actor;
 
 using skee_u64 = uint64_t;
 using skee_u32 = uint32_t;
@@ -463,7 +464,65 @@ public:
 		kCurrentPluginVersion = kPluginVersion1,
 	};
 
-	// TODO: Create wrapper to Get/Set PresetData
-	// SaveJsonPreset
-	// LoadJsonPreset
+	enum ApplyTypes
+	{
+		kPresetApplyFace = (0 << 0),
+		kPresetApplyOverrides = (1 << 0),
+		kPresetApplyBodyMorphs = (1 << 1),
+		kPresetApplyTransforms = (1 << 2),
+		kPresetApplySkinOverrides = (1 << 3),
+		kPresetApplyAll = kPresetApplyFace | kPresetApplyOverrides | kPresetApplyBodyMorphs | kPresetApplyTransforms | kPresetApplySkinOverrides
+	};
+
+	// FilePath e.g. SKSE\\Plugins\\CharGen\\Exported\\name.jslot
+	// TintPath e.g. Textures\\CharGen\\Exported\\name.dds
+	// TintPath optional but recommended for correct look
+
+	virtual bool SavePreset(const char* filePath, const char* tintPath, Actor* actor) = 0;
+	virtual bool LoadPreset(const char* filePath, const char* tintPath, Actor* actor, ApplyTypes applyTypes = kPresetApplyAll) = 0; // Details may be saved to the TESNPC, make sure this character is unique!
+};
+
+class IFormTagInterface : public IPluginInterface
+{
+public:
+	enum
+	{
+		kPluginVersion1 = 1,
+		kCurrentPluginVersion = kPluginVersion1,
+	};
+
+	virtual bool AddTag(TESForm* form, const char* tag) = 0;
+	virtual bool RemoveTag(TESForm* form, const char* tag) = 0;
+	virtual bool HasTags(TESForm* form) = 0;
+	virtual bool HasTag(TESForm* form, const char* tag) = 0;
+
+	class FormVisitor
+	{
+	public:
+		virtual void Visit(TESForm*) = 0;
+	};
+
+	class TagVisitor
+	{
+	public:
+		virtual void Visit(const char*) = 0;
+	};
+
+	// Visits all Tags on a given EditorID
+	virtual void GetTags(TESForm* form, TagVisitor& visitor) = 0;
+
+	// Visits all EditorIDs which have tags
+	virtual void GetForms(FormVisitor& visitor) = 0;
+
+	virtual bool AddPartTag(uint32_t partType, const char* tag, const char* label) = 0;
+	virtual bool RemovePartTag(uint32_t partType, const char* tag) = 0;
+	virtual bool HasPartTags(uint32_t partType) = 0;
+	virtual bool HasPartTag(uint32_t partType, const char* tag) = 0;
+
+	class PartTagVisitor
+	{
+	public:
+		virtual void Visit(const char* name, const char* label) = 0;
+	};
+	virtual void GetPartTags(uint32_t partType, PartTagVisitor& visitor) = 0;
 };

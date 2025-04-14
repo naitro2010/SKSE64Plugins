@@ -1562,7 +1562,7 @@ namespace papyrusNiOverride
 			if (object) {
 				object->IncRef();
 
-				NiExtraData * extraData = object->GetExtraData(dataName);
+				NiExtraData * extraData = NifUtils::GetExtraData(object, dataName);
 				if (extraData) {
 					extraData->IncRef();
 					GetBaseExtraData<T>(extraData, value);

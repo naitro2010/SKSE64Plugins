@@ -929,7 +929,7 @@ BSGeometry* GetFirstShaderType(NiAVObject* object, UInt32 shaderType)
 
 bool NiExtraDataFinder::Accept(NiAVObject* object)
 {
-	m_data = object->GetExtraData(m_name.data);
+	m_data = NifUtils::GetExtraData(object, m_name.data);
 	if (m_data)
 		return true;
 
@@ -944,7 +944,7 @@ NiExtraData* FindExtraData(NiAVObject* object, BSFixedString name)
 	NiExtraData* extraData = NULL;
 	VisitObjects(object, [&](NiAVObject* object)
 	{
-		extraData = object->GetExtraData(name.data);
+		extraData = NifUtils::GetExtraData(object, name.data);
 		if (extraData)
 			return true;
 
@@ -1184,4 +1184,23 @@ bool NifStreamWrapper::VisitObjects(std::function<bool(NiObject*)> functor)
 	}
 	
 	return false;
+}
+
+NiExtraData* NifUtils::GetExtraData(NiObjectNET* object, BSFixedString name)
+{
+	auto item = object->GetExtraData(name);
+
+	// Do exhaustive search instead
+	if (!item)
+	{
+		for (UInt32 i = 0; i < object->m_extraDataLen; ++i)
+		{
+			if (object->m_extraData[i] && object->m_extraData[i]->m_pcName == name.data)
+			{
+				return object->m_extraData[i];
+			}
+		}
+	}
+
+	return item;
 }

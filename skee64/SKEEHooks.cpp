@@ -103,62 +103,62 @@ extern bool					g_hookFaceOverlays;
 namespace Addresses {
 #if STORE_VERSION == RUNTIME_TYPE_STEAM
 	// Hooks
-	static const uintptr_t InvokeCategoriesList_Target = 0x008F7360;
-	static const uintptr_t DoubleMorphCallback2_Target = 0x008F3FA0;
-	static const uintptr_t PreprocessedHeads = 0x0037CF50;
-	static const uintptr_t ApplyRaceMorph_Target = 0x003EC020;
-	static const uintptr_t UpdateMorphs_Target = 0x003EBF10;
-	static const uintptr_t UpdateMorph_Target = 0x003F6770;
-	static const uintptr_t NiAllocate_Geom = 0x00CACFC0;
-	static const uintptr_t NiAllocate_Geom2_Target = 0x00CAD500;
-	static const uintptr_t NiFree_Geom2_Target = 0x00CADFC0;
-	static const uintptr_t UpdateHeadState_Target1 = 0x0037D090;
-	static const uintptr_t UpdateHeadState_Target2 = 0x0037BEC0;
-	static const uintptr_t RaceSexMenu_Vtable = 0x017AE980; // ??_7RaceSexMenu@@6B@
-	static const uintptr_t CachePartsTarget_Target = 0x008F4EA0;
-	static const uintptr_t SetNewInventoryItemModel_Target = 0x008CAB70;
+	static const uintptr_t InvokeCategoriesList_Target = 0x00955C50;		// 52407
+	static const uintptr_t DoubleMorphCallback2_Target = 0x00952880;		// 52356
+	static const uintptr_t PreprocessedHeads = 0x003BCAB0;					// 24731
+	static const uintptr_t ApplyRaceMorph_Target = 0x0042B910;				// 26836
+	static const uintptr_t UpdateMorphs_Target = 0x0042B800;				// 26835
+	static const uintptr_t UpdateMorph_Target = 0x00436060;					// 27061
+	static const uintptr_t NiAllocate_Geom = 0x00D385B0;					// 70939
+	static const uintptr_t NiAllocate_Geom2_Target = 0x00D38AF0;			// 70947
+	static const uintptr_t NiFree_Geom2_Target = 0x00D395B0;				// 70958
+	static const uintptr_t UpdateHeadState_Target1 = 0x003BCBF0;			// 24732
+	static const uintptr_t UpdateHeadState_Target2 = 0x003BBA20;			// 24725
+	static const uintptr_t RaceSexMenu_Vtable = 0x01900078;					// 215885 ??_7RaceSexMenu@@6B@
+	static const uintptr_t CachePartsTarget_Target = 0x00953780;			// 52369
+	static const uintptr_t SetNewInventoryItemModel_Target = 0x009287B0;	// 51776
 	// Functions
-	static const uintptr_t AttachBipedObject = 0x001D8070;
-	static const uintptr_t useFaceGenPreProcessedHeads = 0x01E7D188;
-	static const uintptr_t TESModelTri_vtbl = 0x0168D330; // ??_7TESModelTri@@6B@
-	static const uintptr_t AddGFXArgument = 0x00895AC0;
-	static const uintptr_t FaceGenApplyMorph = 0x003EBD20;
-	static const uintptr_t AddRaceMenuSlider = 0x008FD5F0;
-	static const uintptr_t DoubleMorphCallback = 0x008F6960;
-	static const uintptr_t UpdateNPCMorphs = 0x003795D0;
-	static const uintptr_t UpdateNPCMorph = 0x003797C0;
-	static const uintptr_t UpdateHeadState = 0x0037BD20;
-	static const uintptr_t SetInventoryItemModel = 0x008CAAC0;
-	static const uintptr_t SetNewInventoryItemModel = 0x008CA590;
+	static const uintptr_t AttachBipedObject = 0x00217550;					// 15711
+	static const uintptr_t useFaceGenPreProcessedHeads = 0x0200D2D8;		// 378620
+	static const uintptr_t TESModelTri_vtbl = 0x017DB598;					// 195221 ??_7TESModelTri@@6B@
+	static const uintptr_t AddGFXArgument = 0x008EF9F0;						// 51029
+	static const uintptr_t FaceGenApplyMorph = 0x0042B610;					// 26831
+	static const uintptr_t AddRaceMenuSlider = 0x0095BFA0;					// 52453
+	static const uintptr_t DoubleMorphCallback = 0x00955250;				// 52401
+	static const uintptr_t UpdateNPCMorphs = 0x003B9130;					// 24713
+	static const uintptr_t UpdateNPCMorph = 0x003B9320;						// 24714
+	static const uintptr_t UpdateHeadState = 0x003BB880;					// 24724
+	static const uintptr_t SetInventoryItemModel = 0x00928700;				// 51775
+	static const uintptr_t SetNewInventoryItemModel = 0x009281A0;			// 51772
 #elif STORE_VERSION == RUNTIME_TYPE_GOG
 	// Hooks
-	static const uintptr_t InvokeCategoriesList_Target = 0x008F6AD0;
-	static const uintptr_t DoubleMorphCallback2_Target = 0x008F3710;
-	static const uintptr_t PreprocessedHeads = 0x0037CEE0;
-	static const uintptr_t ApplyRaceMorph_Target = 0x003EBFB0;
-	static const uintptr_t UpdateMorphs_Target = 0x003EBEA0;
-	static const uintptr_t UpdateMorph_Target = 0x003F6700;
-	static const uintptr_t NiAllocate_Geom = 0x00CAC720;
-	static const uintptr_t NiAllocate_Geom2_Target = 0x00CACC60;
-	static const uintptr_t NiFree_Geom2_Target = 0x00CAD720;
-	static const uintptr_t UpdateHeadState_Target1 = 0x0037D020;
-	static const uintptr_t UpdateHeadState_Target2 = 0x0037BE50;
-	static const uintptr_t RaceSexMenu_Vtable = 0x017A98F8; // ??_7RaceSexMenu@@6B@
-	static const uintptr_t CachePartsTarget_Target = 0x008F4610;
-	static const uintptr_t SetNewInventoryItemModel_Target = 0x008CA5B0;
+	static const uintptr_t InvokeCategoriesList_Target = 0x00954D00;		// 52407
+	static const uintptr_t DoubleMorphCallback2_Target = 0x00951940;		// 52356
+	static const uintptr_t PreprocessedHeads = 0x003BC840;					// 24731
+	static const uintptr_t ApplyRaceMorph_Target = 0x0042B6A0;				// 26836
+	static const uintptr_t UpdateMorphs_Target = 0x0042B590;				// 26835
+	static const uintptr_t UpdateMorph_Target = 0x00435DF0;					// 27061
+	static const uintptr_t NiAllocate_Geom = 0x00D37470;					// 70939
+	static const uintptr_t NiAllocate_Geom2_Target = 0x00D379B0;			// 70947
+	static const uintptr_t NiFree_Geom2_Target = 0x00D38470;				// 70958
+	static const uintptr_t UpdateHeadState_Target1 = 0x003BC980;			// 24732
+	static const uintptr_t UpdateHeadState_Target2 = 0x003BB7B0;			// 24725
+	static const uintptr_t RaceSexMenu_Vtable = 0x018FCD78;					// 215885 ??_7RaceSexMenu@@6B@
+	static const uintptr_t CachePartsTarget_Target = 0x00952840;			// 52369
+	static const uintptr_t SetNewInventoryItemModel_Target = 0x00927C90;	// 51776
 	// Functions
-	static const uintptr_t AttachBipedObject = 0x001D7E70;
-	static const uintptr_t useFaceGenPreProcessedHeads = 0x01E77188;
-	static const uintptr_t TESModelTri_vtbl = 0x01688320; // ??_7TESModelTri@@6B@
-	static const uintptr_t AddGFXArgument = 0x008955C0;
-	static const uintptr_t FaceGenApplyMorph = 0x003EBCB0;
-	static const uintptr_t AddRaceMenuSlider = 0x008FCD60;
-	static const uintptr_t DoubleMorphCallback = 0x008F60D0;
-	static const uintptr_t UpdateNPCMorphs = 0x00379560;
-	static const uintptr_t UpdateNPCMorph = 0x00379750;
-	static const uintptr_t UpdateHeadState = 0x0037BCB0;
-	static const uintptr_t SetInventoryItemModel = 0x008CA500;
-	static const uintptr_t SetNewInventoryItemModel = 0x008C9FD0;
+	static const uintptr_t AttachBipedObject = 0x002172E0;					// 15711
+	static const uintptr_t useFaceGenPreProcessedHeads = 0x020092D8;		// 378620
+	static const uintptr_t TESModelTri_vtbl = 0x017D8538;					// 195221 ??_7TESModelTri@@6B@
+	static const uintptr_t AddGFXArgument = 0x008EF0C0;						// 51029
+	static const uintptr_t FaceGenApplyMorph = 0x0042B3A0;					// 26831
+	static const uintptr_t AddRaceMenuSlider = 0x0095AF10;					// 52453
+	static const uintptr_t DoubleMorphCallback = 0x00954300;				// 52401
+	static const uintptr_t UpdateNPCMorphs = 0x003B8EC0;					// 24713
+	static const uintptr_t UpdateNPCMorph = 0x003B90B0;						// 24714
+	static const uintptr_t UpdateHeadState = 0x003BB610;					// 24724
+	static const uintptr_t SetInventoryItemModel = 0x00927BE0;				// 51775
+	static const uintptr_t SetNewInventoryItemModel = 0x00927680;			// 51772
 #endif
 };
 
@@ -995,7 +995,7 @@ void UpdateModelColor_Recursive(NiAVObject * object, NiColor *& color, UInt32 sh
 			BSLightingShaderMaterial * material = static_cast<BSLightingShaderMaterial*>(shaderProperty->material);
 			if (material && material->GetShaderType() == shaderType)
 			{
-				NiExtraData* extraData = shaderProperty->GetExtraData("NO_TINT");
+				NiExtraData* extraData = NifUtils::GetExtraData(shaderProperty, "NO_TINT");
 				if (extraData) {
 					NiBooleanExtraData* booleanData = static_cast<NiBooleanExtraData*>(extraData);
 					if (booleanData->m_data)

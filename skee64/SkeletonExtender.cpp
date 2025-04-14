@@ -106,7 +106,7 @@ void SkeletonExtenderInterface::AddTransforms(TESObjectREFR * refr, bool isFirst
 
 	VisitObjects(skeleton, [&](NiAVObject*object)
 	{
-		NiStringExtraData * stringData = ni_cast(object->GetExtraData("SDTA"), NiStringExtraData);
+		NiStringExtraData * stringData = ni_cast(NifUtils::GetExtraData(object, "SDTA"), NiStringExtraData);
 		if (stringData)
 		{
 			try
@@ -133,7 +133,7 @@ void SkeletonExtenderInterface::AddTransforms(TESObjectREFR * refr, bool isFirst
 			}
 		}
 
-		NiFloatExtraData * floatData = ni_cast(object->GetExtraData("HH_OFFSET"), NiFloatExtraData);
+		NiFloatExtraData * floatData = ni_cast(NifUtils::GetExtraData(object, "HH_OFFSET"), NiFloatExtraData);
 		if (floatData)
 		{
 			current_nodes.insert("NPC");

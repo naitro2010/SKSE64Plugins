@@ -25,6 +25,12 @@ public:
 	virtual void	Invoke(Args * args);
 };
 
+class SKSEScaleform_GetSliderPartData : public GFxFunctionHandler
+{
+public:
+	virtual void	Invoke(Args* args);
+};
+
 class SKSEScaleform_ReloadSliders : public GFxFunctionHandler
 {
 public:

@@ -52,7 +52,7 @@ namespace papyrusCharGen
 		char tintPath[MAX_PATH];
 		sprintf_s(tintPath, "Data\\Textures\\CharGen\\Exported\\");
 
-		g_presetInterface.SaveJsonPreset(slotPath);
+		g_presetInterface.SaveJsonPreset(slotPath, (*g_thePlayer));
 
 		if(g_enableHeadExport)
 			g_task->AddTask(new SKSETaskExportTintMask(tintPath, fileName.data));
@@ -206,7 +206,7 @@ namespace papyrusCharGen
 		char tintPath[MAX_PATH];
 		sprintf_s(tintPath, "Data\\Textures\\CharGen\\Exported\\%s.dds", fileName.data);
 
-		g_presetInterface.SaveJsonPreset(slotPath);
+		g_presetInterface.SaveJsonPreset(slotPath, (*g_thePlayer));
 
 		if(g_enableHeadExport)
 			g_task->AddTask(new SKSETaskExportHead((*g_thePlayer), nifPath, tintPath));
@@ -312,7 +312,7 @@ namespace papyrusCharGen
 	{
 		char slotPath[MAX_PATH];
 		sprintf_s(slotPath, "Data\\SKSE\\Plugins\\CharGen\\Presets\\%s.jslot", fileName.data);
-		g_presetInterface.SaveJsonPreset(slotPath);
+		g_presetInterface.SaveJsonPreset(slotPath, actor);
 	}
 
 	bool IsExternalEnabled(StaticFunctionTag*)
@@ -352,7 +352,7 @@ namespace papyrusCharGen
 	{
 		char slotPath[MAX_PATH];
 		sprintf_s(slotPath, "Data\\SKSE\\Plugins\\CharGen\\Exported\\%s.jslot", fileName.data);
-		g_presetInterface.SaveJsonPreset(slotPath);
+		g_presetInterface.SaveJsonPreset(slotPath, (*g_thePlayer));
 	}
 };
 

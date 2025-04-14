@@ -464,7 +464,7 @@ void BodyMorphMap::ApplyMorphs(TESObjectREFR * refr, std::function<void(const Tr
 {
 	for (auto & morph : *this)
 	{
-		float morphFactor = g_bodyMorphInterface.GetBodyMorphs(refr, morph.first);
+		float morphFactor = g_bodyMorphInterface.GetBodyMorphs(refr, morph.first.c_str());
 		if(vertexFunctor && morph.second.first)
 			vertexFunctor(morph.second.first, morphFactor);
 		if (uvFunctor && morph.second.second)
@@ -476,7 +476,7 @@ bool BodyMorphMap::HasMorphs(TESObjectREFR * refr) const
 {
 	for (auto & morph : *this)
 	{
-		float morphFactor = g_bodyMorphInterface.GetBodyMorphs(refr, morph.first);
+		float morphFactor = g_bodyMorphInterface.GetBodyMorphs(refr, morph.first.c_str());
 		if (morphFactor != 0.0f)
 			return true;
 	}
@@ -507,7 +507,7 @@ std::vector<NIOVTaskUpdateSkinPartition*> MorphFileCache::ApplyMorph(TESObjectRE
 			NiSkinPartition* skinPartition = niptr_cast<NiSkinPartition>(skinInstance->m_spSkinPartition);
 			if (skinPartition) {
 				// Undo morphs on the old shape
-				NiBinaryExtraData* bodyData = (NiBinaryExtraData*)bodyGeometry->GetExtraData("SHAPEDATA");
+				NiBinaryExtraData* bodyData = (NiBinaryExtraData*)NifUtils::GetExtraData(bodyGeometry, "SHAPEDATA");
 
 				bool existingMorphs = !isAttaching && bodyData;
 
@@ -634,6 +634,11 @@ void MorphFileCache::ApplyMorphs(TESObjectREFR * refr, NiAVObject * rootNode, bo
 	using namespace concurrency;
 	using namespace std;
 
+#ifdef _DEBUG
+	auto skeleton = GetRootNode(rootNode);
+	_DMESSAGE("%s - Applying morphs to reference %s (%08X) on node %s [%p] of skeleton %s [%p]", __FUNCTION__, CALL_MEMBER_FN(refr, GetReferenceName)(), refr->formID, rootNode->m_name ? rootNode->m_name : "", (void*)rootNode, skeleton->m_name, (void*)skeleton.get());
+#endif
+
 	vector<NIOVTaskUpdateSkinPartition*> partitionUpdates;
 	if (g_parallelMorphing)
 	{
@@ -683,7 +688,7 @@ void MorphCache::ApplyMorphs(TESObjectREFR * refr, NiAVObject * rootNode, bool i
 
 	// Find the BODYTRI and cache it
 	VisitObjects(rootNode, [&](NiAVObject* object) {
-		NiStringExtraData * stringData = ni_cast(object->GetExtraData("BODYTRI"), NiStringExtraData);
+		NiStringExtraData * stringData = ni_cast(NifUtils::GetExtraData(object, "BODYTRI"), NiStringExtraData);
 		if (stringData) {
 			SKEEFixedString filePath = CreateTRIPath(stringData->m_pString);
 			CacheFile(filePath.c_str());
@@ -1039,6 +1044,9 @@ bool MorphCache::CacheFile(const char * relativePath)
 		MorphFileCache fileCache;
 		fileCache.accessed = std::time(nullptr);
 		fileCache.vertexMap = trishapeMap;
+#ifdef _DEBUG
+		fileCache.path = relativePath;
+#endif
 
 		Lock();
 		m_data.emplace(relativePath, fileCache);
@@ -1814,7 +1822,7 @@ UInt32 BodyMorphInterface::Impl_EvaluateBodyMorphs(TESObjectREFR * actor)
 			auto & templates = morphSet->second;
 			UInt32 ret = templates->Evaluate([&](const SKEEFixedString & morphName, float value)
 			{
-				SetMorph(actor, morphName, "RSMBodyGen", value);
+				SetMorph(actor, morphName.c_str(), "RSMBodyGen", value);
 			});
 
 			_VMESSAGE("%s - Generated %d BodyMorphs for %s (%08X)", __FUNCTION__, ret, CALL_MEMBER_FN(actor, GetReferenceName)(), actor->formID);

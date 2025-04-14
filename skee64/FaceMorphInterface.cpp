@@ -215,7 +215,7 @@ bool TRIFile::Load(const char * triPath)
 
 bool TRIFile::Apply(BSGeometry * geometry, SKEEFixedString morphName, float relative)
 {
-	BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+	BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 	if (!extraData)
 		return false;
 
@@ -1112,7 +1112,7 @@ void FaceMorphInterface::ApplyMorph(TESNPC * npc, BGSHeadPart * headPart, BSFace
 				if (geometry) {
 					auto sculptHost = sculptTarget->GetSculptHost(SculptData::GetHostByPart(headPart), false);
 					if (sculptHost) {
-						BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+						BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 						if (extraData) {
 							for (auto data : *sculptHost)
 								extraData->vertexData[data.first] += data.second;
@@ -1188,7 +1188,7 @@ void FaceMorphInterface::ApplyMorphs(TESNPC * npc, BSFaceGenNiNode * faceNode)
 				if (headPart) {
 					auto sculptHost = sculptTarget->GetSculptHost(SculptData::GetHostByPart(headPart), false);
 					if (sculptHost) {
-						BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+						BSFaceGenBaseMorphExtraData * extraData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 						if (extraData) {
 							for (auto data : *sculptHost)
 								extraData->vertexData[data.first] += data.second;

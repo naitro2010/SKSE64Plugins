@@ -82,22 +82,16 @@ public:
 	bool SaveBinaryPreset(const char* filePath);
 	bool LoadBinaryPreset(const char* filePath, PresetDataPtr presetData);
 
-	enum ApplyTypes
-	{
-		kPresetApplyFace = (0 << 0),
-		kPresetApplyOverrides = (1 << 0),
-		kPresetApplyBodyMorphs = (1 << 1),
-		kPresetApplyTransforms = (1 << 2),
-		kPresetApplySkinOverrides = (1 << 3),
-		kPresetApplyAll = kPresetApplyFace | kPresetApplyOverrides | kPresetApplyBodyMorphs | kPresetApplyTransforms | kPresetApplySkinOverrides
-	};
-
 	void ApplyPresetData(Actor* actor, PresetDataPtr presetData, bool setSkinColor = false, ApplyTypes applyType = kPresetApplyAll);
 	void ApplyPreset(Actor* actor, TESRace* race, TESNPC* npc, PresetDataPtr presetData, ApplyTypes applyType);
 
-	bool SaveJsonPreset(const char* filePath);
+	bool SaveJsonPreset(const char* filePath, Actor* actor);
 	bool LoadJsonPreset(const char* filePath, PresetDataPtr presetData);
 
 protected:
 	PresetMap m_mappedPreset;
+
+	// Inherited via IPresetInterface
+	virtual bool SavePreset(const char* filePath, const char* tintPath, Actor* actor);
+	virtual bool LoadPreset(const char* filePath, const char* tintPath, Actor* actor, ApplyTypes applyTypes = kPresetApplyAll);
 };

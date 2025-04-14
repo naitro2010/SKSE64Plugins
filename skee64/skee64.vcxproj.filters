@@ -170,6 +170,15 @@
     <ClCompile Include="CommandInterface.cpp">
       <Filter>interfaces</Filter>
     </ClCompile>
+    <ClCompile Include="PresetInterface.cpp">
+      <Filter>interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="ILogger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="FormTagInterface.cpp">
+      <Filter>interfaces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
@@ -409,6 +418,18 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="CommandInterface.h">
+      <Filter>interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="PresetInterface.h">
+      <Filter>interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ITypes.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ILogger.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FormTagInterface.h">
       <Filter>interfaces</Filter>
     </ClInclude>
   </ItemGroup>

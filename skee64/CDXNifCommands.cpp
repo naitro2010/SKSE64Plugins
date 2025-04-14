@@ -38,7 +38,7 @@ void ApplyMorphData(BSTriShape * geometry, CDXVectorMap & vectorMap, float multi
 		if (headPart) {
 			auto sculptHost = sculptTarget->GetSculptHost(SculptData::GetHostByPart(headPart), true);
 			if (sculptHost) {
-				BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+				BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 				if (morphData) {
 					for (auto it : vectorMap) {
 						// Store it in the NPC mapped data

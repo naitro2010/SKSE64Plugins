@@ -182,7 +182,7 @@ void TintMaskInterface::ApplyMasks(TESObjectREFR * refr, bool isFirstPerson, TES
 		LayerTarget mask;
 		mask.targetIndex = 0; // Target the diffuse by default
 		if (mask.object = object->GetAsBSGeometry()) {
-			auto textureData = ni_cast(object->GetExtraData(BSFixedString("MASKT").data), NiStringsExtraData);
+			auto textureData = ni_cast(NifUtils::GetExtraData(object, "MASKT"), NiStringsExtraData);
 			if (textureData) {
 				for (SInt32 i = 0; i < textureData->m_size; ++i)
 				{
@@ -190,7 +190,7 @@ void TintMaskInterface::ApplyMasks(TESObjectREFR * refr, bool isFirstPerson, TES
 				}
 				
 			}
-			auto colorData = ni_cast(object->GetExtraData(BSFixedString("MASKC").data), NiIntegersExtraData);
+			auto colorData = ni_cast(NifUtils::GetExtraData(object, "MASKC"), NiIntegersExtraData);
 			if (colorData) {
 				for (SInt32 i = 0; i < colorData->m_size && i < colorData->m_size; ++i)
 				{
@@ -198,7 +198,7 @@ void TintMaskInterface::ApplyMasks(TESObjectREFR * refr, bool isFirstPerson, TES
 				}
 			}
 
-			auto alphaData = ni_cast(object->GetExtraData(BSFixedString("MASKA").data), NiFloatsExtraData);
+			auto alphaData = ni_cast(NifUtils::GetExtraData(object, "MASKA"), NiFloatsExtraData);
 			if (alphaData) {
 				for (SInt32 i = 0; i < alphaData->m_size && i < alphaData->m_size; ++i)
 				{
@@ -313,7 +313,7 @@ void TintMaskInterface::ApplyMasks(TESObjectREFR * refr, bool isFirstPerson, TES
 						hairMaterial->tintColor.g = 0.5;
 						hairMaterial->tintColor.b = 0.5;
 
-						NiExtraData* extraData = lightingShader->GetExtraData("NO_TINT");
+						NiExtraData* extraData = NifUtils::GetExtraData(lightingShader, "NO_TINT");
 						if (!extraData) {
 							extraData = NiBooleanExtraData::Create("NO_TINT", true);
 							lightingShader->AddExtraData(extraData);
@@ -706,7 +706,7 @@ void TintMaskInterface::GetSlotTextureIndexMap(TESObjectREFR* refr, TESObjectARM
 				for (auto& layer : shape.second)
 				{
 					SInt32 textureIndex = 0;
-					if (sscanf_s(layer.first, "%d", &textureIndex))
+					if (sscanf_s(layer.first.c_str(), "%d", &textureIndex))
 					{
 						for (auto& slot : layer.second.slots)
 						{

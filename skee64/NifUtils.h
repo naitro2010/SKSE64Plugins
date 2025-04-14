@@ -118,6 +118,12 @@ bool SaveRenderedDDS(NiTexture * pkTexture, const char * pcFileName);
 bool VisitObjects(NiAVObject * parent, std::function<bool(NiAVObject*)> functor);
 bool VisitGeometry(NiAVObject* parent, std::function<bool(BSGeometry*)> functor);
 
+namespace NifUtils
+{
+	NiExtraData* GetExtraData(NiObjectNET* object, BSFixedString name);
+}
+
+
 class GeometryVisitor
 {
 public:

@@ -202,6 +202,9 @@ std::string GetFormIdentifier(TESForm * form)
 TESForm * GetFormFromIdentifier(const std::string & formIdentifier)
 {
 	std::size_t pos = formIdentifier.find_first_of('|');
+	if (pos == std::string::npos) {
+		return LookupFormByEditorID(formIdentifier.c_str());
+	}
 	std::string modName = formIdentifier.substr(0, pos);
 	std::string modForm = formIdentifier.substr(pos + 1);
 

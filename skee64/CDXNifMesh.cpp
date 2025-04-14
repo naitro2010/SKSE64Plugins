@@ -128,7 +128,7 @@ CDXBSTriShapeMesh * CDXBSTriShapeMesh::Create(CDXD3DDevice * pDevice, BSTriShape
 		nifMesh->m_vertCount = vertCount;
 		nifMesh->m_indexCount = triangleCount;
 
-		BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+		BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 		if (morphData) {
 			nifMesh->m_morphable = true;
 		}
@@ -140,11 +140,12 @@ CDXBSTriShapeMesh * CDXBSTriShapeMesh::Create(CDXD3DDevice * pDevice, BSTriShape
 
 			BSDynamicTriShape * dynamicTriShape = ni_cast(geometry, BSDynamicTriShape);
 			UInt32 vertexSize = NiSkinPartition::GetVertexSize(geometry->vertexDesc);
+			UInt32 vertOffset = NiSkinPartition::GetVertexAttributeOffset(geometry->vertexDesc, VertexAttribute::VA_POSITION);
 			UInt32 uvOffset = NiSkinPartition::GetVertexAttributeOffset(geometry->vertexDesc, VertexAttribute::VA_TEXCOORD0);
 
 			if(dynamicTriShape) dynamicTriShape->lock.Lock();
 			for (UInt32 i = 0; i < vertCount; i++) {
-				NiPoint3 * vertex = dynamicTriShape ? reinterpret_cast<NiPoint3*>(&reinterpret_cast<DirectX::XMFLOAT4*>(dynamicTriShape->pDynamicData)[i]) : reinterpret_cast<NiPoint3*>(&skinPartition->m_pkPartitions[0].shapeData->m_RawVertexData[i * vertexSize]);
+				NiPoint3 * vertex = dynamicTriShape ? reinterpret_cast<NiPoint3*>(&reinterpret_cast<DirectX::XMFLOAT4*>(dynamicTriShape->pDynamicData)[i]) : reinterpret_cast<NiPoint3*>(&skinPartition->m_pkPartitions[0].shapeData->m_RawVertexData[i * vertexSize + vertOffset]);
 				NiPoint3 xformed = localTransform * (*vertex);
 				struct UVCoord
 				{
@@ -293,7 +294,7 @@ CDXLegacyNifMesh * CDXLegacyNifMesh::Create(CDXD3DDevice * pDevice, NiGeometry *
 				nifMesh->m_vertCount = vertCount;
 				nifMesh->m_indexCount = triangleCount;
 
-				BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)geometry->GetExtraData("FOD");
+				BSFaceGenBaseMorphExtraData * morphData = (BSFaceGenBaseMorphExtraData *)NifUtils::GetExtraData(geometry, "FOD");
 				if (morphData) {
 					nifMesh->m_morphable = true;
 				}

@@ -1,4 +1,5 @@
 #include "Morpher.h"
+#include "NifUtils.h"
 #include <cmath>
 #ifdef min
 #undef min
@@ -30,7 +31,7 @@ void NormalApplicator::Apply()
 
 	if (dynamicTriShape) dynamicTriShape->lock.Lock();
 
-	NiIntegersExtraData* extraData = static_cast<NiIntegersExtraData*>(geometry->GetExtraData("LOCKEDNORM"));
+	NiIntegersExtraData* extraData = static_cast<NiIntegersExtraData*>(NifUtils::GetExtraData(geometry, "LOCKEDNORM"));
 	if (extraData)
 	{
 		for (UInt32 i = 0; i < extraData->m_size; ++i)

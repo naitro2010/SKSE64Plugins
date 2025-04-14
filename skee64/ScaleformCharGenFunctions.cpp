@@ -33,11 +33,13 @@
 #include "NiTransformInterface.h"
 #include "BodyMorphInterface.h"
 #include "PresetInterface.h"
+#include "FormTagInterface.h"
 
 #include "ScaleformUtils.h"
 
 extern FaceMorphInterface	g_morphInterface;
 extern PresetInterface		g_presetInterface;
+extern FormTagInterface		g_formTagInterface;
 extern PartSet	g_partSet;
 
 extern SKSETaskInterface * g_task;
@@ -94,7 +96,7 @@ void SKSEScaleform_SavePreset::Invoke(Args * args)
 	const char	* strData = args->args[0].GetString();
 
 	if (saveJson)
-		args->result->SetBool(g_presetInterface.SaveJsonPreset(strData));
+		args->result->SetBool(g_presetInterface.SaveJsonPreset(strData, (*g_thePlayer)));
 	else
 		args->result->SetBool(g_presetInterface.SaveBinaryPreset(strData));
 }
@@ -330,6 +332,219 @@ void SKSEScaleform_ReloadSliders::Invoke(Args * args)
 	}
 }
 
+std::pair<RaceSexMenu*, RaceMenuSlider*> GetRaceMenuSlider(UInt32 sliderId)
+{
+	MenuManager* mm = MenuManager::GetSingleton();
+	if (mm)
+	{
+		BSFixedString t("RaceSex Menu");
+		RaceSexMenu* raceMenu = (RaceSexMenu*)mm->GetMenu(&t);
+		if (raceMenu)
+		{
+			RaceMenuSlider* slider = NULL;
+			RaceSexMenu::RaceComponent* raceData = NULL;
+
+			UInt8 gender = 0;
+			PlayerCharacter* player = (*g_thePlayer);
+			TESNPC* actorBase = DYNAMIC_CAST(player->baseForm, TESForm, TESNPC);
+			if (actorBase)
+				gender = CALL_MEMBER_FN(actorBase, GetSex)();
+
+			if (raceMenu->raceIndex < raceMenu->sliderData[gender].count)
+				raceData = &raceMenu->sliderData[gender][raceMenu->raceIndex];
+			if (raceData && sliderId < raceData->sliders.count)
+				slider = &raceData->sliders[sliderId];
+
+			if (raceData && slider)
+			{
+				return {raceMenu, slider};
+			}
+		}
+	}
+	return {nullptr, nullptr};
+}
+
+void SKSEScaleform_GetSliderPartData::Invoke(Args* args)
+{
+	using namespace ScaleformUtils;
+
+	ASSERT(args->numArgs >= 1);
+	ASSERT(args->args[0].GetType() == GFxValue::kType_Number);
+
+	UInt32 sliderId = (UInt32)args->args[0].GetNumber();
+
+	auto createTagsForPart = [](GFxMovieView* view, GFxValue* object, BGSHeadPart* headPart)
+	{
+		if (g_formTagInterface.HasTags(headPart))
+		{
+			class TagVisitor : public IFormTagInterface::TagVisitor
+			{
+			public:
+				TagVisitor(GFxMovieView* view, GFxValue* arr) : m_view(view), m_array(arr) { };
+				virtual void Visit(const char* tag) override
+				{
+					GFxValue str;
+					m_view->CreateString(&str, tag);
+					m_array->PushBack(&str);
+				}
+				GFxMovieView* m_view;
+				GFxValue* m_array;
+			};
+			TagVisitor visitor{ view, object };
+			g_formTagInterface.GetTags(headPart, visitor);
+		}
+	};
+
+	auto createFilterTags = [](GFxMovieView* view, GFxValue* object, uint32_t partType)
+	{
+		if (g_formTagInterface.HasPartTags(partType))
+		{
+			class PartTagVisitor : public IFormTagInterface::PartTagVisitor
+			{
+			public:
+				PartTagVisitor(GFxMovieView* view, GFxValue* arr) : m_view(view), m_array(arr) { };
+				virtual void Visit(const char* name, const char* label) override
+				{
+					GFxValue obj;
+					m_view->CreateObject(&obj);
+					RegisterString(&obj, m_view, "name", name);
+					RegisterString(&obj, m_view, "label", label);
+					m_array->PushBack(&obj);
+				}
+				GFxMovieView* m_view;
+				GFxValue* m_array;
+			};
+			PartTagVisitor visitor{ view, object };
+			g_formTagInterface.GetPartTags(partType, visitor);
+		}
+	};
+
+	auto addHeadPart = [&createTagsForPart](GFxMovieView* view, GFxValue* object, BGSHeadPart* headPart, uint32_t index)
+	{
+		GFxValue partObject;
+		view->CreateObject(&partObject);
+		SKEEFixedString full(headPart->fullName.name.c_str());
+		SKEEFixedString edid(headPart->partName.c_str());
+		std::string partName(headPart->fullName.name.c_str());
+		if (partName.empty())
+			partName = headPart->partName.c_str();
+		else if(full != edid)
+			partName += " <font size='14' color='#666666'>[" + std::string(headPart->partName.c_str()) + "]</font>";
+
+		RegisterString(&partObject, view, "name", partName.c_str());
+		RegisterNumber(&partObject, "index", static_cast<double>(index));
+
+		GFxValue tagArray;
+		view->CreateArray(&tagArray);
+		partObject.SetMember("tags", &tagArray);
+		createTagsForPart(view, &tagArray, headPart);
+
+		// Add the ModName as a tag, and a property
+		if (headPart)
+		{
+			auto mod = GetModInfoByFormID(headPart->formID);
+			if (mod) {
+				GFxValue str;
+				view->CreateString(&str, mod->name);
+				tagArray.PushBack(&str);
+
+				RegisterString(&partObject, view, "source", mod->name);
+			}
+		}
+
+		object->PushBack(&partObject);
+	};
+
+	std::set<std::string> modSet;
+
+	auto [raceMenu, slider] = GetRaceMenuSlider(sliderId);
+	if (raceMenu && slider)
+	{
+		args->movie->CreateObject(args->result);
+
+		GFxValue tagArray;
+		args->movie->CreateArray(&tagArray);
+		args->result->SetMember("tags", &tagArray);
+
+		GFxValue partArray;
+		args->movie->CreateArray(&partArray);
+		args->result->SetMember("parts", &partArray);
+
+		switch(slider->type)
+		{
+		case RaceMenuSlider::kTypeHeadPart:
+			{
+				if(slider->index < RaceSexMenu::kNumHeadPartLists)
+				{
+					createFilterTags(args->movie, &tagArray, slider->index);
+
+					BGSHeadPart * headPart = NULL;
+					for (int32_t i = 0; i < raceMenu->headParts[slider->index].count; ++i)
+					{
+						raceMenu->headParts[slider->index].GetNthItem(i, headPart);
+						if (headPart)
+						{
+							addHeadPart(args->movie, &partArray, headPart, i);
+
+							auto mod = GetModInfoByFormID(headPart->formID);
+							if (mod) {
+								modSet.insert(mod->name);
+							}
+						}
+					}
+				}
+			}
+			break;
+		case RaceMenuSlider::kTypeDoubleMorph:
+			{
+				// Provide case for custom parts
+				if(slider->index >= SLIDER_OFFSET) {
+					UInt32 sliderIndex = slider->index - SLIDER_OFFSET;
+					SliderInternalPtr sliderInternal = g_morphInterface.GetSliderByIndex((*g_thePlayer)->race, sliderIndex);
+					if(sliderInternal) {
+						switch (sliderInternal->type)
+						{
+							// Only acquire part information for actual part sliders
+							case SliderInternal::kTypeHeadPart:
+							{
+								UInt8 partType = sliderInternal->presetCount;
+								HeadPartList * partList = g_partSet.GetPartList(partType);
+								if (partList)
+								{
+									createFilterTags(args->movie, &tagArray, partType);
+
+									uint32_t i = 0;
+									for (auto& headPart : *partList)
+									{
+										addHeadPart(args->movie, &partArray, headPart, i++);
+
+										auto mod = GetModInfoByFormID(headPart->formID);
+										if (mod) {
+											modSet.insert(mod->name);
+										}
+									}
+								}
+							}
+							break;
+						}
+					}
+				}
+			}
+			break;
+		}
+
+		// Add the mods automatically as tags
+		for (auto& mod : modSet)
+		{
+			GFxValue obj;
+			args->movie->CreateObject(&obj);
+			RegisterString(&obj, args->movie, "name", mod.c_str());
+			RegisterString(&obj, args->movie, "label", mod.c_str());
+			tagArray.PushBack(&obj);
+		}
+	}
+}
+
 void SKSEScaleform_GetSliderData::Invoke(Args * args)
 {
 	using namespace ScaleformUtils;
@@ -341,80 +556,61 @@ void SKSEScaleform_GetSliderData::Invoke(Args * args)
 	UInt32 sliderId = (UInt32)args->args[0].GetNumber();
 	double value = args->args[1].GetNumber();
 
-	MenuManager * mm = MenuManager::GetSingleton();
-	if(mm)
+
+	auto [raceMenu, slider] = GetRaceMenuSlider(sliderId);
+	if (raceMenu && slider)
 	{
-		BSFixedString t("RaceSex Menu");
-		RaceSexMenu * raceMenu = (RaceSexMenu *)mm->GetMenu(&t);
-		if(raceMenu)
+		args->movie->CreateObject(args->result);
+		RegisterNumber(args->result, "type", slider->type);
+		RegisterNumber(args->result, "index", slider->index);
+
+		switch(slider->type)
 		{
-			RaceMenuSlider * slider = NULL;
-			RaceSexMenu::RaceComponent * raceData = NULL;
-
-			UInt8 gender = 0;
-			PlayerCharacter * player = (*g_thePlayer);
-			TESNPC * actorBase = DYNAMIC_CAST(player->baseForm, TESForm, TESNPC);
-			if(actorBase)
-				gender = CALL_MEMBER_FN(actorBase, GetSex)();
-
-			if(raceMenu->raceIndex < raceMenu->sliderData[gender].count)
-				raceData = &raceMenu->sliderData[gender][raceMenu->raceIndex];
-			if(raceData && sliderId < raceData->sliders.count)
-				slider = &raceData->sliders[sliderId];
-
-			if(raceData && slider)
+		case RaceMenuSlider::kTypeHeadPart:
 			{
-				args->movie->CreateObject(args->result);
-				RegisterNumber(args->result, "type", slider->type);
-				RegisterNumber(args->result, "index", slider->index);
-
-				switch(slider->type)
+				if(slider->index < RaceSexMenu::kNumHeadPartLists)
 				{
-				case RaceMenuSlider::kTypeHeadPart:
-					{
-						if(slider->index < RaceSexMenu::kNumHeadPartLists)
-						{
-							BGSHeadPart * headPart = NULL;
-							raceMenu->headParts[slider->index].GetNthItem((UInt32)value, headPart);
-							if(headPart) {
-								RegisterNumber(args->result, "formId", headPart->formID);
-								RegisterString(args->result, args->movie, "partName", headPart->partName.data);
-							}
-						}
+					BGSHeadPart * headPart = NULL;
+					raceMenu->headParts[slider->index].GetNthItem((UInt32)value, headPart);
+					if(headPart) {
+						RegisterNumber(args->result, "formId", headPart->formID);
+						RegisterString(args->result, args->movie, "partName", headPart->partName.data);
 					}
-					break;
-				case RaceMenuSlider::kTypeDoubleMorph:
-					{
-						// Provide case for custom parts
-						if(slider->index >= SLIDER_OFFSET) {
-							UInt32 sliderIndex = slider->index - SLIDER_OFFSET;
-							SliderInternalPtr sliderInternal = g_morphInterface.GetSliderByIndex(player->race, sliderIndex);
-							if(sliderInternal) {
-								RegisterNumber(args->result, "subType", sliderInternal->type);
-								switch (sliderInternal->type)
-								{
-									// Only acquire part information for actual part sliders
-									case SliderInternal::kTypeHeadPart:
-									{
-										UInt8 partType = sliderInternal->presetCount;
-										HeadPartList * partList = g_partSet.GetPartList(partType);
-										if (partList)
-										{
-											BGSHeadPart * targetPart = g_partSet.GetPartByIndex(partList, (UInt32)value - 1);
-											if (targetPart) {
-												RegisterNumber(args->result, "formId", targetPart->formID);
-												RegisterString(args->result, args->movie, "partName", targetPart->partName.data);
-											}
-										}
-									}
-									break;
-								}
-							}
-						}
-					}
-					break;
+					RegisterNumber(args->result, "parts", static_cast<double>(raceMenu->headParts[slider->index].count));
 				}
 			}
+			break;
+		case RaceMenuSlider::kTypeDoubleMorph:
+			{
+				// Provide case for custom parts
+				if(slider->index >= SLIDER_OFFSET) {
+					UInt32 sliderIndex = slider->index - SLIDER_OFFSET;
+					SliderInternalPtr sliderInternal = g_morphInterface.GetSliderByIndex((*g_thePlayer)->race, sliderIndex);
+					if(sliderInternal) {
+						RegisterNumber(args->result, "subType", sliderInternal->type);
+						switch (sliderInternal->type)
+						{
+							// Only acquire part information for actual part sliders
+							case SliderInternal::kTypeHeadPart:
+							{
+								UInt8 partType = sliderInternal->presetCount;
+								HeadPartList * partList = g_partSet.GetPartList(partType);
+								if (partList)
+								{
+									BGSHeadPart * targetPart = g_partSet.GetPartByIndex(partList, (UInt32)value - 1);
+									if (targetPart) {
+										RegisterNumber(args->result, "formId", targetPart->formID);
+										RegisterString(args->result, args->movie, "partName", targetPart->partName.data);
+									}
+									RegisterNumber(args->result, "parts", static_cast<double>(partList->size()));
+								}
+							}
+							break;
+						}
+					}
+				}
+			}
+			break;
 		}
 	}
 }

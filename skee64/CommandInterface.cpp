@@ -151,7 +151,14 @@ void CommandInterface::RegisterCommands()
 		char tintPath[MAX_PATH];
 		sprintf_s(tintPath, "Data\\Textures\\CharGen\\Exported\\");
 
-		g_presetInterface.SaveJsonPreset(slotPath);
+		Actor* actor = static_cast<Actor*>(thisObj);
+		TESNPC* npc = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESNPC);
+		if (!npc) {
+			Console_Print("Failed to acquire ActorBase for specified reference");
+			return true;
+		}
+
+		g_presetInterface.SaveJsonPreset(slotPath, actor);
 
 		g_task->AddTask(new SKSETaskExportTintMask(tintPath, argument));
 		Console_Print("Preset saved");
